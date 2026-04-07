@@ -156,7 +156,7 @@
   <div class="topo">
     <input type="file" id="csvFile" accept=".csv">
     <button onclick="importarCSV()">Importar CSV</button>
-    <button onclick="limparTudo()">Limpar</button>
+    <button onclick="limparTudo()">Limpar tudo</button>
   </div>
 
   <div class="obs">
@@ -269,8 +269,32 @@
   <script>
     let dadosImportados = [];
 
+    function salvarNoNavegador() {
+      localStorage.setItem("dashboardFreteDados", JSON.stringify(dadosImportados));
+    }
+
+    function carregarDoNavegador() {
+      const dadosSalvos = localStorage.getItem("dashboardFreteDados");
+
+      if (dadosSalvos) {
+        dadosImportados = JSON.parse(dadosSalvos);
+        atualizarTelaCompleta();
+      }
+    }
+
+    function atualizarTelaCompleta() {
+      preencherFiltroTipoFrete();
+      renderizarTabelaBase();
+      calcularDashboard();
+      renderizarResumoTipoFrete();
+      renderizarResumoTransportadora();
+      renderizarResumoPeriodo();
+    }
+
     function limparTudo() {
       dadosImportados = [];
+      localStorage.removeItem("dashboardFreteDados");
+
       document.getElementById("corpoTabela").innerHTML = "";
       document.getElementById("tabelaTipoFrete").innerHTML = "";
       document.getElementById("tabelaTransportadora").innerHTML = "";
@@ -370,8 +394,6 @@
         return;
       }
 
-      dadosImportados = [];
-
       for (let i = 1; i < linhasBrutas.length; i++) {
         const partes = linhasBrutas[i].split(separador);
 
@@ -384,15 +406,21 @@
           valorFrete: normalizarNumero(partes[idxValorFrete])
         };
 
-        dadosImportados.push(item);
+        if (!item.pedido) continue;
+
+        const indiceExistente = dadosImportados.findIndex(d => d.pedido === item.pedido);
+
+        if (indiceExistente >= 0) {
+          dadosImportados[indiceExistente] = item;
+        } else {
+          dadosImportados.push(item);
+        }
       }
 
-      preencherFiltroTipoFrete();
-      renderizarTabelaBase();
-      calcularDashboard();
-      renderizarResumoTipoFrete();
-      renderizarResumoTransportadora();
-      renderizarResumoPeriodo();
+      salvarNoNavegador();
+      atualizarTelaCompleta();
+      document.getElementById("csvFile").value = "";
+      alert("Importação concluída. Os dados ficaram salvos no navegador.");
     }
 
     function renderizarTabelaBase(lista = dadosImportados) {
@@ -575,6 +603,8 @@
         tabela.appendChild(linha);
       });
     }
+
+    carregarDoNavegador();
   </script>
 
 </body>
