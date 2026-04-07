@@ -26,49 +26,9 @@
       margin-bottom: 18px;
     }
 
-    .topo {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 18px;
-      align-items: center;
-    }
-
-    input[type="file"] {
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid #d1d5db;
-      width: 100%;
-    }
-
-    button {
-      padding: 10px 14px;
-      border: none;
-      border-radius: 10px;
-      background: #1565c0;
-      color: white;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .obs, .status {
-      font-size: 13px;
-      color: #4b5563;
-      margin-bottom: 10px;
-    }
-
     .cards-principais {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      margin-bottom: 16px;
-    }
-
-    .cards-secundarios {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
       gap: 14px;
       margin-bottom: 16px;
     }
@@ -89,13 +49,6 @@
 
     .card.grande {
       min-height: 130px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .card.retangular {
-      min-height: 115px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -136,28 +89,6 @@
     .azul .card-label,
     .azul .card-valor,
     .azul .card-subtexto {
-      color: white;
-    }
-
-    .verde {
-      background: linear-gradient(135deg, #0f9d58, #34a853);
-      color: white;
-    }
-
-    .verde .card-label,
-    .verde .card-valor,
-    .verde .card-subtexto {
-      color: white;
-    }
-
-    .vermelho {
-      background: linear-gradient(135deg, #c62828, #e53935);
-      color: white;
-    }
-
-    .vermelho .card-label,
-    .vermelho .card-valor,
-    .vermelho .card-subtexto {
       color: white;
     }
 
@@ -232,13 +163,38 @@
       gap: 20px;
     }
 
+    .acoes-rodape {
+      margin-top: 34px;
+      padding-top: 14px;
+      border-top: 1px solid #dbe3ea;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .acoes-rodape input[type="file"] {
+      background: white;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      font-size: 12px;
+    }
+
+    .acoes-rodape button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 8px;
+      background: #dfe7ef;
+      color: #374151;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
     @media (max-width: 900px) {
       .cards-principais {
         grid-template-columns: repeat(2, 1fr);
-      }
-
-      .cards-secundarios {
-        grid-template-columns: 1fr;
       }
 
       .cards-pequenos {
@@ -259,21 +215,8 @@
         font-size: 22px;
       }
 
-      .topo {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .topo button {
-        width: 100%;
-      }
-
       .cards-principais {
         grid-template-columns: 1fr 1fr;
-      }
-
-      .cards-secundarios {
-        grid-template-columns: 1fr;
       }
 
       .cards-pequenos {
@@ -285,11 +228,6 @@
         padding: 16px;
       }
 
-      .card.retangular {
-        min-height: 105px;
-        padding: 16px;
-      }
-
       .card.pequeno {
         min-height: 82px;
         padding: 12px;
@@ -298,6 +236,16 @@
       .card-valor {
         font-size: 28px;
       }
+
+      .acoes-rodape {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .acoes-rodape button,
+      .acoes-rodape input[type="file"] {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -305,21 +253,6 @@
 
   <h1>Dashboard de Frete</h1>
 
-  <div class="topo">
-    <input type="file" id="csvFile" accept=".csv">
-    <button onclick="importarCSV()">Importar CSV local</button>
-    <button onclick="exportarDados()">Exportar dados</button>
-    <button onclick="carregarCSVdoGitHub()">Recarregar do GitHub</button>
-    <button onclick="limparTudo()">Limpar tudo</button>
-  </div>
-
-  <div class="obs">
-    Cabeçalhos esperados no CSV: <strong>Pedido, Data, Tipo Frete, Transportadora, Valor NF, Valor Frete</strong>
-  </div>
-
-  <div class="status" id="statusCarregamento">Aguardando carregamento.</div>
-
-  <!-- CARDS PRINCIPAIS -->
   <div class="cards-principais">
     <div class="card grande azul">
       <div class="card-label">Frete do mês atual</div>
@@ -346,22 +279,6 @@
     </div>
   </div>
 
-  <!-- CARDS RETANGULARES -->
-  <div class="cards-secundarios">
-    <div class="card retangular verde">
-      <div class="card-label">Transportadora com menor %</div>
-      <div class="card-valor" id="cardMenorTransportadora">-</div>
-      <div class="card-subtexto" id="subMenorTransportadora">0,00%</div>
-    </div>
-
-    <div class="card retangular vermelho">
-      <div class="card-label">Transportadora com maior %</div>
-      <div class="card-valor" id="cardMaiorTransportadora">-</div>
-      <div class="card-subtexto" id="subMaiorTransportadora">0,00%</div>
-    </div>
-  </div>
-
-  <!-- CARDS PEQUENOS -->
   <div class="cards-pequenos">
     <div class="card pequeno">
       <div class="card-label">Frete de ontem</div>
@@ -460,12 +377,16 @@
     </table>
   </div>
 
+  <div class="acoes-rodape">
+    <input type="file" id="csvFile" accept=".csv">
+    <button onclick="importarCSV()">Importar CSV local</button>
+    <button onclick="exportarDados()">Exportar dados</button>
+    <button onclick="carregarCSVdoGitHub()">Recarregar do GitHub</button>
+    <button onclick="limparTudo()">Limpar tudo</button>
+  </div>
+
   <script>
     let dadosImportados = [];
-
-    function atualizarStatus(texto) {
-      document.getElementById("statusCarregamento").innerText = texto;
-    }
 
     function salvarNoNavegador() {
       localStorage.setItem("dashboardFreteDados", JSON.stringify(dadosImportados));
@@ -477,7 +398,6 @@
       if (dadosSalvos) {
         dadosImportados = JSON.parse(dadosSalvos);
         atualizarTelaCompleta();
-        atualizarStatus("Dados carregados do navegador.");
         return true;
       }
 
@@ -510,7 +430,6 @@
       document.getElementById("csvFile").value = "";
 
       limparCardsExecutivos();
-      atualizarStatus("Base limpa.");
     }
 
     function limparCardsExecutivos() {
@@ -520,10 +439,6 @@
       document.getElementById("subFreteAcumulado").innerText = "Base completa";
       document.getElementById("cardTipoCIF").innerText = "0,00%";
       document.getElementById("cardTipoCIFFOB").innerText = "0,00%";
-      document.getElementById("cardMenorTransportadora").innerText = "-";
-      document.getElementById("subMenorTransportadora").innerText = "0,00%";
-      document.getElementById("cardMaiorTransportadora").innerText = "-";
-      document.getElementById("subMaiorTransportadora").innerText = "0,00%";
       document.getElementById("cardFreteOntem").innerText = "0,00%";
       document.getElementById("cardPedidosOntem").innerText = "0";
     }
@@ -548,8 +463,6 @@
     }
 
     async function carregarCSVdoGitHub() {
-      atualizarStatus("Carregando base_frete.csv do GitHub...");
-
       try {
         const resposta = await fetch("base_frete.csv?cache=" + new Date().getTime());
 
@@ -560,9 +473,7 @@
         const texto = await resposta.text();
         processarCSV(texto, false);
         salvarNoNavegador();
-        atualizarStatus("Dados carregados automaticamente do GitHub.");
       } catch (erro) {
-        atualizarStatus("Não foi possível carregar base_frete.csv do GitHub.");
         console.error(erro);
       }
     }
@@ -675,44 +586,6 @@
 
       document.getElementById("cardFreteOntem").innerText = formatarPercentual(percentualOntem);
       document.getElementById("cardPedidosOntem").innerText = dadosOntem.length;
-
-      const gruposTransportadora = {};
-      dadosImportados.forEach(item => {
-        const chave = item.transportadora || "Sem transportadora";
-        if (!gruposTransportadora[chave]) {
-          gruposTransportadora[chave] = { nf: 0, frete: 0, pedidos: 0 };
-        }
-        gruposTransportadora[chave].nf += item.valorNF;
-        gruposTransportadora[chave].frete += item.valorFrete;
-        gruposTransportadora[chave].pedidos += 1;
-      });
-
-      const ranking = Object.keys(gruposTransportadora).map(nome => {
-        const g = gruposTransportadora[nome];
-        return {
-          nome,
-          percentual: g.nf > 0 ? (g.frete / g.nf) * 100 : 0,
-          pedidos: g.pedidos
-        };
-      }).filter(item => item.pedidos > 0);
-
-      if (ranking.length > 0) {
-        ranking.sort((a, b) => a.percentual - b.percentual);
-
-        const menor = ranking[0];
-        const maior = ranking[ranking.length - 1];
-
-        document.getElementById("cardMenorTransportadora").innerText = menor.nome;
-        document.getElementById("subMenorTransportadora").innerText = `${formatarPercentual(menor.percentual)} | ${menor.pedidos} pedidos`;
-
-        document.getElementById("cardMaiorTransportadora").innerText = maior.nome;
-        document.getElementById("subMaiorTransportadora").innerText = `${formatarPercentual(maior.percentual)} | ${maior.pedidos} pedidos`;
-      } else {
-        document.getElementById("cardMenorTransportadora").innerText = "-";
-        document.getElementById("subMenorTransportadora").innerText = "0,00%";
-        document.getElementById("cardMaiorTransportadora").innerText = "-";
-        document.getElementById("subMaiorTransportadora").innerText = "0,00%";
-      }
     }
 
     function processarCSV(texto, mostrarAlerta = false) {
