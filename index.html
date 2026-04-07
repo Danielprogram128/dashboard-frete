@@ -5,113 +5,183 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard de Frete</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: Arial, sans-serif;
-      background: #f3f5f7;
+      background: #eef3f8;
       margin: 0;
-      padding: 20px;
-      color: #222;
+      padding: 16px;
+      color: #1f2937;
     }
 
     h1, h2 {
-      margin-bottom: 15px;
+      margin: 0 0 14px 0;
+    }
+
+    h1 {
+      font-size: 26px;
+      margin-bottom: 18px;
     }
 
     .topo {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 20px;
+      gap: 10px;
+      margin-bottom: 18px;
       align-items: center;
     }
 
     input[type="file"] {
       background: white;
       padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      width: 100%;
     }
 
     button {
-      padding: 10px 16px;
+      padding: 10px 14px;
       border: none;
-      border-radius: 8px;
-      background: #1677ff;
+      border-radius: 10px;
+      background: #1565c0;
       color: white;
       cursor: pointer;
       font-size: 14px;
+      font-weight: 600;
     }
 
-    .cards {
+    .obs, .status {
+      font-size: 13px;
+      color: #4b5563;
+      margin-bottom: 10px;
+    }
+
+    .cards-principais {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 15px;
-      margin-bottom: 25px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .cards-secundarios {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .cards-pequenos {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
     }
 
     .card {
       background: white;
-      border-radius: 12px;
+      border-radius: 18px;
       padding: 18px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
     }
 
-    .card-titulo {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 8px;
+    .card.grande {
+      min-height: 130px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card.retangular {
+      min-height: 115px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card.pequeno {
+      min-height: 90px;
+      padding: 14px;
+    }
+
+    .card-label {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
 
     .card-valor {
-      font-size: 28px;
-      font-weight: bold;
+      font-size: 34px;
+      font-weight: 800;
       color: #0b4ea2;
+      line-height: 1.1;
     }
 
-    .secao {
-      margin-top: 30px;
+    .card-subtexto {
+      font-size: 13px;
+      color: #4b5563;
+      margin-top: 8px;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      margin-top: 10px;
-    }
-
-    th, td {
-      border: 1px solid #dcdcdc;
-      padding: 10px;
-      text-align: center;
-      font-size: 14px;
-    }
-
-    th {
-      background: #0b4ea2;
+    .azul {
+      background: linear-gradient(135deg, #0b4ea2, #1976d2);
       color: white;
     }
 
-    .grid-dupla {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+    .azul .card-label,
+    .azul .card-valor,
+    .azul .card-subtexto {
+      color: white;
     }
 
-    .obs {
-      font-size: 13px;
-      color: #555;
-      margin-top: 8px;
+    .verde {
+      background: linear-gradient(135deg, #0f9d58, #34a853);
+      color: white;
+    }
+
+    .verde .card-label,
+    .verde .card-valor,
+    .verde .card-subtexto {
+      color: white;
+    }
+
+    .vermelho {
+      background: linear-gradient(135deg, #c62828, #e53935);
+      color: white;
+    }
+
+    .vermelho .card-label,
+    .vermelho .card-valor,
+    .vermelho .card-subtexto {
+      color: white;
+    }
+
+    .cinza {
+      background: linear-gradient(135deg, #374151, #4b5563);
+      color: white;
+    }
+
+    .cinza .card-label,
+    .cinza .card-valor,
+    .cinza .card-subtexto {
+      color: white;
+    }
+
+    .secao {
+      margin-top: 26px;
     }
 
     .base-container {
       max-height: 350px;
       overflow: auto;
       background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      border-radius: 14px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
       margin-top: 10px;
     }
 
@@ -126,31 +196,107 @@
     .filtros-base input,
     .filtros-base select {
       padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
       background: white;
     }
 
-    .base-container table {
-      margin-top: 0;
-      box-shadow: none;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      margin-top: 10px;
     }
 
-    .base-container thead th {
+    th, td {
+      border: 1px solid #e5e7eb;
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    th {
+      background: #0b4ea2;
+      color: white;
       position: sticky;
       top: 0;
       z-index: 1;
     }
 
-    .status {
-      font-size: 13px;
-      color: #444;
-      margin-top: 6px;
+    .grid-dupla {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
     }
 
     @media (max-width: 900px) {
+      .cards-principais {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .cards-secundarios {
+        grid-template-columns: 1fr;
+      }
+
+      .cards-pequenos {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
       .grid-dupla {
         grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 12px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      .topo {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .topo button {
+        width: 100%;
+      }
+
+      .cards-principais {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .cards-secundarios {
+        grid-template-columns: 1fr;
+      }
+
+      .cards-pequenos {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .card.grande {
+        min-height: 120px;
+        padding: 16px;
+      }
+
+      .card.retangular {
+        min-height: 105px;
+        padding: 16px;
+      }
+
+      .card.pequeno {
+        min-height: 82px;
+        padding: 12px;
+      }
+
+      .card-valor {
+        font-size: 28px;
       }
     }
   </style>
@@ -171,29 +317,65 @@
     Cabeçalhos esperados no CSV: <strong>Pedido, Data, Tipo Frete, Transportadora, Valor NF, Valor Frete</strong>
   </div>
 
-  <div class="status" id="statusCarregamento">
-    Aguardando carregamento.
+  <div class="status" id="statusCarregamento">Aguardando carregamento.</div>
+
+  <!-- CARDS PRINCIPAIS -->
+  <div class="cards-principais">
+    <div class="card grande azul">
+      <div class="card-label">Frete do mês atual</div>
+      <div class="card-valor" id="cardFreteMesAtual">0,00%</div>
+      <div class="card-subtexto" id="subFreteMesAtual">Mês atual</div>
+    </div>
+
+    <div class="card grande cinza">
+      <div class="card-label">Frete acumulado</div>
+      <div class="card-valor" id="cardFreteAcumulado">0,00%</div>
+      <div class="card-subtexto" id="subFreteAcumulado">Base completa</div>
+    </div>
+
+    <div class="card grande">
+      <div class="card-label">% CIF</div>
+      <div class="card-valor" id="cardTipoCIF">0,00%</div>
+      <div class="card-subtexto">Somente pedidos CIF</div>
+    </div>
+
+    <div class="card grande">
+      <div class="card-label">% CIF/FOB</div>
+      <div class="card-valor" id="cardTipoCIFFOB">0,00%</div>
+      <div class="card-subtexto">Somente pedidos CIF/FOB</div>
+    </div>
   </div>
 
-  <div class="cards">
-    <div class="card">
-      <div class="card-titulo">Total de pedidos</div>
+  <!-- CARDS RETANGULARES -->
+  <div class="cards-secundarios">
+    <div class="card retangular verde">
+      <div class="card-label">Transportadora com menor %</div>
+      <div class="card-valor" id="cardMenorTransportadora">-</div>
+      <div class="card-subtexto" id="subMenorTransportadora">0,00%</div>
+    </div>
+
+    <div class="card retangular vermelho">
+      <div class="card-label">Transportadora com maior %</div>
+      <div class="card-valor" id="cardMaiorTransportadora">-</div>
+      <div class="card-subtexto" id="subMaiorTransportadora">0,00%</div>
+    </div>
+  </div>
+
+  <!-- CARDS PEQUENOS -->
+  <div class="cards-pequenos">
+    <div class="card pequeno">
+      <div class="card-label">Frete de ontem</div>
+      <div class="card-valor" id="cardFreteOntem">0,00%</div>
+    </div>
+
+    <div class="card pequeno">
+      <div class="card-label">Pedidos ontem</div>
+      <div class="card-valor" id="cardPedidosOntem">0</div>
+    </div>
+
+    <div class="card pequeno">
+      <div class="card-label">Pedidos totais</div>
       <div class="card-valor" id="totalPedidos">0</div>
-    </div>
-
-    <div class="card">
-      <div class="card-titulo">Faturamento total</div>
-      <div class="card-valor" id="faturamentoTotal">R$ 0,00</div>
-    </div>
-
-    <div class="card">
-      <div class="card-titulo">Frete total</div>
-      <div class="card-valor" id="freteTotal">R$ 0,00</div>
-    </div>
-
-    <div class="card">
-      <div class="card-titulo">% Frete geral</div>
-      <div class="card-valor" id="percentualFrete">0,00%</div>
     </div>
   </div>
 
@@ -309,6 +491,7 @@
       renderizarResumoTipoFrete();
       renderizarResumoTransportadora();
       renderizarResumoPeriodo();
+      atualizarCardsExecutivos();
     }
 
     function limparTudo() {
@@ -321,16 +504,28 @@
       document.getElementById("tabelaPeriodo").innerHTML = "";
 
       document.getElementById("totalPedidos").innerText = "0";
-      document.getElementById("faturamentoTotal").innerText = "R$ 0,00";
-      document.getElementById("freteTotal").innerText = "R$ 0,00";
-      document.getElementById("percentualFrete").innerText = "0,00%";
-
       document.getElementById("filtroPedido").value = "";
       document.getElementById("filtroTransportadora").value = "";
       document.getElementById("filtroTipoFrete").innerHTML = '<option value="">Todos os tipos de frete</option>';
       document.getElementById("csvFile").value = "";
 
+      limparCardsExecutivos();
       atualizarStatus("Base limpa.");
+    }
+
+    function limparCardsExecutivos() {
+      document.getElementById("cardFreteMesAtual").innerText = "0,00%";
+      document.getElementById("subFreteMesAtual").innerText = "Mês atual";
+      document.getElementById("cardFreteAcumulado").innerText = "0,00%";
+      document.getElementById("subFreteAcumulado").innerText = "Base completa";
+      document.getElementById("cardTipoCIF").innerText = "0,00%";
+      document.getElementById("cardTipoCIFFOB").innerText = "0,00%";
+      document.getElementById("cardMenorTransportadora").innerText = "-";
+      document.getElementById("subMenorTransportadora").innerText = "0,00%";
+      document.getElementById("cardMaiorTransportadora").innerText = "-";
+      document.getElementById("subMaiorTransportadora").innerText = "0,00%";
+      document.getElementById("cardFreteOntem").innerText = "0,00%";
+      document.getElementById("cardPedidosOntem").innerText = "0";
     }
 
     function importarCSV() {
@@ -395,15 +590,129 @@
 
     function obterPeriodo(dataTexto) {
       if (!dataTexto) return "Sem data";
-
       const partes = dataTexto.split("/");
       if (partes.length === 3) {
         const mes = partes[1].padStart(2, "0");
         const ano = partes[2];
         return `${mes}/${ano}`;
       }
-
       return dataTexto;
+    }
+
+    function converterDataBRParaDate(dataTexto) {
+      if (!dataTexto) return null;
+      const partes = dataTexto.split("/");
+      if (partes.length !== 3) return null;
+
+      const dia = parseInt(partes[0], 10);
+      const mes = parseInt(partes[1], 10) - 1;
+      const ano = parseInt(partes[2], 10);
+
+      const data = new Date(ano, mes, dia);
+      if (isNaN(data.getTime())) return null;
+      return data;
+    }
+
+    function formatarPercentual(valor) {
+      return (valor || 0).toFixed(2) + "%";
+    }
+
+    function calcularPercentualDaLista(lista) {
+      let nf = 0;
+      let frete = 0;
+
+      lista.forEach(item => {
+        nf += item.valorNF;
+        frete += item.valorFrete;
+      });
+
+      return nf > 0 ? (frete / nf) * 100 : 0;
+    }
+
+    function atualizarCardsExecutivos() {
+      const hoje = new Date();
+      const mesAtual = hoje.getMonth();
+      const anoAtual = hoje.getFullYear();
+
+      const ontem = new Date();
+      ontem.setDate(hoje.getDate() - 1);
+
+      const dadosMesAtual = dadosImportados.filter(item => {
+        const data = converterDataBRParaDate(item.data);
+        return data && data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
+      });
+
+      const dadosOntem = dadosImportados.filter(item => {
+        const data = converterDataBRParaDate(item.data);
+        return data &&
+          data.getDate() === ontem.getDate() &&
+          data.getMonth() === ontem.getMonth() &&
+          data.getFullYear() === ontem.getFullYear();
+      });
+
+      const dadosCIF = dadosImportados.filter(item =>
+        String(item.tipoFrete || "").trim().toUpperCase() === "CIF"
+      );
+
+      const dadosCIFFOB = dadosImportados.filter(item =>
+        String(item.tipoFrete || "").trim().toUpperCase() === "CIF/FOB"
+      );
+
+      const percentualMesAtual = calcularPercentualDaLista(dadosMesAtual);
+      const percentualAcumulado = calcularPercentualDaLista(dadosImportados);
+      const percentualCIF = calcularPercentualDaLista(dadosCIF);
+      const percentualCIFFOB = calcularPercentualDaLista(dadosCIFFOB);
+      const percentualOntem = calcularPercentualDaLista(dadosOntem);
+
+      document.getElementById("cardFreteMesAtual").innerText = formatarPercentual(percentualMesAtual);
+      document.getElementById("subFreteMesAtual").innerText = `${dadosMesAtual.length} pedidos no mês atual`;
+
+      document.getElementById("cardFreteAcumulado").innerText = formatarPercentual(percentualAcumulado);
+      document.getElementById("subFreteAcumulado").innerText = `${dadosImportados.length} pedidos na base`;
+
+      document.getElementById("cardTipoCIF").innerText = formatarPercentual(percentualCIF);
+      document.getElementById("cardTipoCIFFOB").innerText = formatarPercentual(percentualCIFFOB);
+
+      document.getElementById("cardFreteOntem").innerText = formatarPercentual(percentualOntem);
+      document.getElementById("cardPedidosOntem").innerText = dadosOntem.length;
+
+      const gruposTransportadora = {};
+      dadosImportados.forEach(item => {
+        const chave = item.transportadora || "Sem transportadora";
+        if (!gruposTransportadora[chave]) {
+          gruposTransportadora[chave] = { nf: 0, frete: 0, pedidos: 0 };
+        }
+        gruposTransportadora[chave].nf += item.valorNF;
+        gruposTransportadora[chave].frete += item.valorFrete;
+        gruposTransportadora[chave].pedidos += 1;
+      });
+
+      const ranking = Object.keys(gruposTransportadora).map(nome => {
+        const g = gruposTransportadora[nome];
+        return {
+          nome,
+          percentual: g.nf > 0 ? (g.frete / g.nf) * 100 : 0,
+          pedidos: g.pedidos
+        };
+      }).filter(item => item.pedidos > 0);
+
+      if (ranking.length > 0) {
+        ranking.sort((a, b) => a.percentual - b.percentual);
+
+        const menor = ranking[0];
+        const maior = ranking[ranking.length - 1];
+
+        document.getElementById("cardMenorTransportadora").innerText = menor.nome;
+        document.getElementById("subMenorTransportadora").innerText = `${formatarPercentual(menor.percentual)} | ${menor.pedidos} pedidos`;
+
+        document.getElementById("cardMaiorTransportadora").innerText = maior.nome;
+        document.getElementById("subMaiorTransportadora").innerText = `${formatarPercentual(maior.percentual)} | ${maior.pedidos} pedidos`;
+      } else {
+        document.getElementById("cardMenorTransportadora").innerText = "-";
+        document.getElementById("subMenorTransportadora").innerText = "0,00%";
+        document.getElementById("cardMaiorTransportadora").innerText = "-";
+        document.getElementById("subMaiorTransportadora").innerText = "0,00%";
+      }
     }
 
     function processarCSV(texto, mostrarAlerta = false) {
@@ -546,21 +855,7 @@
     }
 
     function calcularDashboard() {
-      let totalPedidos = dadosImportados.length;
-      let faturamentoTotal = 0;
-      let freteTotal = 0;
-
-      dadosImportados.forEach(item => {
-        faturamentoTotal += item.valorNF;
-        freteTotal += item.valorFrete;
-      });
-
-      const percentualFrete = faturamentoTotal > 0 ? (freteTotal / faturamentoTotal) * 100 : 0;
-
-      document.getElementById("totalPedidos").innerText = totalPedidos;
-      document.getElementById("faturamentoTotal").innerText = "R$ " + faturamentoTotal.toFixed(2);
-      document.getElementById("freteTotal").innerText = "R$ " + freteTotal.toFixed(2);
-      document.getElementById("percentualFrete").innerText = percentualFrete.toFixed(2) + "%";
+      document.getElementById("totalPedidos").innerText = dadosImportados.length;
     }
 
     function renderizarResumoTipoFrete() {
@@ -669,7 +964,6 @@
 
     async function iniciarSistema() {
       const carregouDoNavegador = carregarDoNavegador();
-
       if (!carregouDoNavegador) {
         await carregarCSVdoGitHub();
       }
@@ -677,6 +971,5 @@
 
     iniciarSistema();
   </script>
-
 </body>
 </html>
