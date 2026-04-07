@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Frete</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f5f7;
+      margin: 0;
+      padding: 20px;
+      color: #222;
+    }
+
+    h1, h2 {
+      margin-bottom: 15px;
+    }
+
+    .topo {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+
+    input[type="file"] {
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background: #1677ff;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .card-titulo {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .card-valor {
+      font-size: 28px;
+      font-weight: bold;
+      color: #0b4ea2;
+    }
+
+    .secao {
+      margin-top: 30px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-top: 10px;
+    }
+
+    th, td {
+      border: 1px solid #dcdcdc;
+      padding: 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    th {
+      background: #0b4ea2;
+      color: white;
+    }
+
+    .grid-dupla {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .obs {
+      font-size: 13px;
+      color: #555;
+      margin-top: 8px;
+    }
+
+    .base-container {
+      max-height: 350px;
+      overflow: auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-top: 10px;
+    }
+
+    .filtros-base {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .filtros-base input,
+    .filtros-base select {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: white;
+    }
+
+    .base-container table {
+      margin-top: 0;
+      box-shadow: none;
+    }
+
+    .base-container thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    @media (max-width: 900px) {
+      .grid-dupla {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Dashboard de Frete</h1>
+
+  <div class="topo">
+    <input type="file" id="csvFile" accept=".csv">
+    <button onclick="importarCSV()">Importar CSV</button>
+    <button onclick="limparTudo()">Limpar</button>
+  </div>
+
+  <div class="obs">
+    Cabeçalhos esperados no CSV: <strong>Pedido, Data, Tipo Frete, Transportadora, Valor NF, Valor Frete</strong>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-titulo">Total de pedidos</div>
+      <div class="card-valor" id="totalPedidos">0</div>
+    </div>
+
+    <div class="card">
+      <div class="card-titulo">Faturamento total</div>
+      <div class="card-valor" id="faturamentoTotal">R$ 0,00</div>
+    </div>
+
+    <div class="card">
+      <div class="card-titulo">Frete total</div>
+      <div class="card-valor" id="freteTotal">R$ 0,00</div>
+    </div>
+
+    <div class="card">
+      <div class="card-titulo">% Frete geral</div>
+      <div class="card-valor" id="percentualFrete">0,00%</div>
+    </div>
+  </div>
+
+  <div class="secao">
+    <h2>Base importada</h2>
+
+    <div class="filtros-base">
+      <input type="text" id="filtroPedido" placeholder="Filtrar pedido">
+      <input type="text" id="filtroTransportadora" placeholder="Filtrar transportadora">
+      <select id="filtroTipoFrete">
+        <option value="">Todos os tipos de frete</option>
+      </select>
+      <button onclick="aplicarFiltros()">Filtrar</button>
+      <button onclick="limparFiltros()">Limpar filtros</button>
+    </div>
+
+    <div class="base-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Pedido</th>
+            <th>Data</th>
+            <th>Tipo Frete</th>
+            <th>Transportadora</th>
+            <th>Valor NF</th>
+            <th>Valor Frete</th>
+            <th>% Frete</th>
+          </tr>
+        </thead>
+        <tbody id="corpoTabela"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="secao grid-dupla">
+    <div>
+      <h2>Resumo por Tipo de Frete</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Pedidos</th>
+            <th>Valor NF</th>
+            <th>Valor Frete</th>
+            <th>% Frete</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaTipoFrete"></tbody>
+      </table>
+    </div>
+
+    <div>
+      <h2>Resumo por Transportadora</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Transportadora</th>
+            <th>Pedidos</th>
+            <th>Valor NF</th>
+            <th>Valor Frete</th>
+            <th>% Frete</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaTransportadora"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="secao">
+    <h2>Resumo por Período</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Período</th>
+          <th>Pedidos</th>
+          <th>Valor NF</th>
+          <th>Valor Frete</th>
+          <th>% Frete</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaPeriodo"></tbody>
+    </table>
+  </div>
+
+  <script>
+    let dadosImportados = [];
+
+    function limparTudo() {
+      dadosImportados = [];
+      document.getElementById("corpoTabela").innerHTML = "";
+      document.getElementById("tabelaTipoFrete").innerHTML = "";
+      document.getElementById("tabelaTransportadora").innerHTML = "";
+      document.getElementById("tabelaPeriodo").innerHTML = "";
+
+      document.getElementById("totalPedidos").innerText = "0";
+      document.getElementById("faturamentoTotal").innerText = "R$ 0,00";
+      document.getElementById("freteTotal").innerText = "R$ 0,00";
+      document.getElementById("percentualFrete").innerText = "0,00%";
+
+      document.getElementById("filtroPedido").value = "";
+      document.getElementById("filtroTransportadora").value = "";
+      document.getElementById("filtroTipoFrete").innerHTML = '<option value="">Todos os tipos de frete</option>';
+      document.getElementById("csvFile").value = "";
+    }
+
+    function importarCSV() {
+      const fileInput = document.getElementById("csvFile");
+      const file = fileInput.files[0];
+
+      if (!file) {
+        alert("Selecione um arquivo CSV.");
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const texto = e.target.result;
+        processarCSV(texto);
+      };
+
+      reader.readAsText(file, "UTF-8");
+    }
+
+    function detectarSeparador(linhaCabecalho) {
+      const qtdPontoVirgula = (linhaCabecalho.match(/;/g) || []).length;
+      const qtdVirgula = (linhaCabecalho.match(/,/g) || []).length;
+      return qtdPontoVirgula >= qtdVirgula ? ";" : ",";
+    }
+
+    function normalizarNumero(valor) {
+      if (!valor) return 0;
+
+      let texto = String(valor).trim();
+      texto = texto.replace(/R\$/g, "").trim();
+
+      if (texto.includes(".") && texto.includes(",")) {
+        texto = texto.replace(/\./g, "").replace(",", ".");
+      } else if (texto.includes(",")) {
+        texto = texto.replace(",", ".");
+      }
+
+      return parseFloat(texto) || 0;
+    }
+
+    function obterPeriodo(dataTexto) {
+      if (!dataTexto) return "Sem data";
+
+      const partes = dataTexto.split("/");
+      if (partes.length === 3) {
+        const mes = partes[1].padStart(2, "0");
+        const ano = partes[2];
+        return `${mes}/${ano}`;
+      }
+
+      return dataTexto;
+    }
+
+    function processarCSV(texto) {
+      const linhasBrutas = texto.split(/\r?\n/).filter(linha => linha.trim() !== "");
+
+      if (linhasBrutas.length < 2) {
+        alert("O CSV parece vazio ou inválido.");
+        return;
+      }
+
+      const separador = detectarSeparador(linhasBrutas[0]);
+      const cabecalhos = linhasBrutas[0].split(separador).map(c => c.trim().toLowerCase());
+
+      const idxPedido = cabecalhos.indexOf("pedido");
+      const idxData = cabecalhos.indexOf("data");
+      const idxTipoFrete = cabecalhos.indexOf("tipo frete");
+      const idxTransportadora = cabecalhos.indexOf("transportadora");
+      const idxValorNF = cabecalhos.indexOf("valor nf");
+      const idxValorFrete = cabecalhos.indexOf("valor frete");
+
+      if (
+        idxPedido === -1 ||
+        idxData === -1 ||
+        idxTipoFrete === -1 ||
+        idxTransportadora === -1 ||
+        idxValorNF === -1 ||
+        idxValorFrete === -1
+      ) {
+        alert("O CSV precisa ter estas colunas: Pedido, Data, Tipo Frete, Transportadora, Valor NF, Valor Frete");
+        return;
+      }
+
+      dadosImportados = [];
+
+      for (let i = 1; i < linhasBrutas.length; i++) {
+        const partes = linhasBrutas[i].split(separador);
+
+        const item = {
+          pedido: (partes[idxPedido] || "").trim(),
+          data: (partes[idxData] || "").trim(),
+          tipoFrete: (partes[idxTipoFrete] || "").trim(),
+          transportadora: (partes[idxTransportadora] || "").trim(),
+          valorNF: normalizarNumero(partes[idxValorNF]),
+          valorFrete: normalizarNumero(partes[idxValorFrete])
+        };
+
+        dadosImportados.push(item);
+      }
+
+      preencherFiltroTipoFrete();
+      renderizarTabelaBase();
+      calcularDashboard();
+      renderizarResumoTipoFrete();
+      renderizarResumoTransportadora();
+      renderizarResumoPeriodo();
+    }
+
+    function renderizarTabelaBase(lista = dadosImportados) {
+      const corpo = document.getElementById("corpoTabela");
+      corpo.innerHTML = "";
+
+      lista.forEach(item => {
+        const percentual = item.valorNF > 0 ? (item.valorFrete / item.valorNF) * 100 : 0;
+
+        const linha = document.createElement("tr");
+        linha.innerHTML = `
+          <td>${item.pedido}</td>
+          <td>${item.data}</td>
+          <td>${item.tipoFrete}</td>
+          <td>${item.transportadora}</td>
+          <td>R$ ${item.valorNF.toFixed(2)}</td>
+          <td>R$ ${item.valorFrete.toFixed(2)}</td>
+          <td>${percentual.toFixed(2)}%</td>
+        `;
+
+        corpo.appendChild(linha);
+      });
+    }
+
+    function preencherFiltroTipoFrete() {
+      const select = document.getElementById("filtroTipoFrete");
+      select.innerHTML = '<option value="">Todos os tipos de frete</option>';
+
+      const tiposUnicos = [...new Set(dadosImportados.map(item => item.tipoFrete).filter(Boolean))].sort();
+
+      tiposUnicos.forEach(tipo => {
+        const option = document.createElement("option");
+        option.value = tipo;
+        option.textContent = tipo;
+        select.appendChild(option);
+      });
+    }
+
+    function aplicarFiltros() {
+      const filtroPedido = document.getElementById("filtroPedido").value.trim().toLowerCase();
+      const filtroTransportadora = document.getElementById("filtroTransportadora").value.trim().toLowerCase();
+      const filtroTipoFrete = document.getElementById("filtroTipoFrete").value;
+
+      const filtrados = dadosImportados.filter(item => {
+        const atendePedido = !filtroPedido || item.pedido.toLowerCase().includes(filtroPedido);
+        const atendeTransportadora = !filtroTransportadora || item.transportadora.toLowerCase().includes(filtroTransportadora);
+        const atendeTipoFrete = !filtroTipoFrete || item.tipoFrete === filtroTipoFrete;
+
+        return atendePedido && atendeTransportadora && atendeTipoFrete;
+      });
+
+      renderizarTabelaBase(filtrados);
+    }
+
+    function limparFiltros() {
+      document.getElementById("filtroPedido").value = "";
+      document.getElementById("filtroTransportadora").value = "";
+      document.getElementById("filtroTipoFrete").value = "";
+      renderizarTabelaBase();
+    }
+
+    function calcularDashboard() {
+      let totalPedidos = dadosImportados.length;
+      let faturamentoTotal = 0;
+      let freteTotal = 0;
+
+      dadosImportados.forEach(item => {
+        faturamentoTotal += item.valorNF;
+        freteTotal += item.valorFrete;
+      });
+
+      const percentualFrete = faturamentoTotal > 0 ? (freteTotal / faturamentoTotal) * 100 : 0;
+
+      document.getElementById("totalPedidos").innerText = totalPedidos;
+      document.getElementById("faturamentoTotal").innerText = "R$ " + faturamentoTotal.toFixed(2);
+      document.getElementById("freteTotal").innerText = "R$ " + freteTotal.toFixed(2);
+      document.getElementById("percentualFrete").innerText = percentualFrete.toFixed(2) + "%";
+    }
+
+    function renderizarResumoTipoFrete() {
+      const tabela = document.getElementById("tabelaTipoFrete");
+      tabela.innerHTML = "";
+
+      const grupos = {};
+
+      dadosImportados.forEach(item => {
+        const chave = item.tipoFrete || "Sem tipo";
+
+        if (!grupos[chave]) {
+          grupos[chave] = { pedidos: 0, valorNF: 0, valorFrete: 0 };
+        }
+
+        grupos[chave].pedidos += 1;
+        grupos[chave].valorNF += item.valorNF;
+        grupos[chave].valorFrete += item.valorFrete;
+      });
+
+      Object.keys(grupos).sort().forEach(chave => {
+        const g = grupos[chave];
+        const percentual = g.valorNF > 0 ? (g.valorFrete / g.valorNF) * 100 : 0;
+
+        const linha = document.createElement("tr");
+        linha.innerHTML = `
+          <td>${chave}</td>
+          <td>${g.pedidos}</td>
+          <td>R$ ${g.valorNF.toFixed(2)}</td>
+          <td>R$ ${g.valorFrete.toFixed(2)}</td>
+          <td>${percentual.toFixed(2)}%</td>
+        `;
+        tabela.appendChild(linha);
+      });
+    }
+
+    function renderizarResumoTransportadora() {
+      const tabela = document.getElementById("tabelaTransportadora");
+      tabela.innerHTML = "";
+
+      const grupos = {};
+
+      dadosImportados.forEach(item => {
+        const chave = item.transportadora || "Sem transportadora";
+
+        if (!grupos[chave]) {
+          grupos[chave] = { pedidos: 0, valorNF: 0, valorFrete: 0 };
+        }
+
+        grupos[chave].pedidos += 1;
+        grupos[chave].valorNF += item.valorNF;
+        grupos[chave].valorFrete += item.valorFrete;
+      });
+
+      Object.keys(grupos)
+        .sort((a, b) => grupos[b].valorFrete - grupos[a].valorFrete)
+        .forEach(chave => {
+          const g = grupos[chave];
+          const percentual = g.valorNF > 0 ? (g.valorFrete / g.valorNF) * 100 : 0;
+
+          const linha = document.createElement("tr");
+          linha.innerHTML = `
+            <td>${chave}</td>
+            <td>${g.pedidos}</td>
+            <td>R$ ${g.valorNF.toFixed(2)}</td>
+            <td>R$ ${g.valorFrete.toFixed(2)}</td>
+            <td>${percentual.toFixed(2)}%</td>
+          `;
+          tabela.appendChild(linha);
+        });
+    }
+
+    function renderizarResumoPeriodo() {
+      const tabela = document.getElementById("tabelaPeriodo");
+      tabela.innerHTML = "";
+
+      const grupos = {};
+
+      dadosImportados.forEach(item => {
+        const chave = obterPeriodo(item.data);
+
+        if (!grupos[chave]) {
+          grupos[chave] = { pedidos: 0, valorNF: 0, valorFrete: 0 };
+        }
+
+        grupos[chave].pedidos += 1;
+        grupos[chave].valorNF += item.valorNF;
+        grupos[chave].valorFrete += item.valorFrete;
+      });
+
+      Object.keys(grupos).sort().forEach(chave => {
+        const g = grupos[chave];
+        const percentual = g.valorNF > 0 ? (g.valorFrete / g.valorNF) * 100 : 0;
+
+        const linha = document.createElement("tr");
+        linha.innerHTML = `
+          <td>${chave}</td>
+          <td>${g.pedidos}</td>
+          <td>R$ ${g.valorNF.toFixed(2)}</td>
+          <td>R$ ${g.valorFrete.toFixed(2)}</td>
+          <td>${percentual.toFixed(2)}%</td>
+        `;
+        tabela.appendChild(linha);
+      });
+    }
+  </script>
+
+</body>
+</html>
