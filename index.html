@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard de Frete</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -23,6 +24,38 @@
 
     h1 {
       font-size: 26px;
+      margin-bottom: 10px;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .topbar input[type="date"] {
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      background: white;
+    }
+
+    .topbar button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 10px;
+      background: #1565c0;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .ultima-atualizacao {
+      font-size: 13px;
+      color: #6b7280;
       margin-bottom: 18px;
     }
 
@@ -73,6 +106,7 @@
       font-weight: 800;
       color: #0b4ea2;
       line-height: 1.1;
+      transition: color 0.2s ease;
     }
 
     .card-subtexto {
@@ -130,6 +164,17 @@
       border: 1px solid #d1d5db;
       border-radius: 10px;
       background: white;
+    }
+
+    .filtros-base button {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 10px;
+      background: #1565c0;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
     }
 
     table {
@@ -215,6 +260,16 @@
         font-size: 22px;
       }
 
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .topbar input[type="date"],
+      .topbar button {
+        width: 100%;
+      }
+
       .cards-principais {
         grid-template-columns: 1fr 1fr;
       }
@@ -251,130 +306,142 @@
 </head>
 <body>
 
-  <h1>Dashboard de Frete</h1>
+  <div id="areaExportacao">
+    <h1>Dashboard de Frete</h1>
 
-  <div class="cards-principais">
-    <div class="card grande azul">
-      <div class="card-label">Frete do mês atual</div>
-      <div class="card-valor" id="cardFreteMesAtual">0,00%</div>
-      <div class="card-subtexto" id="subFreteMesAtual">Mês atual</div>
+    <div class="topbar">
+      <input type="date" id="dataInicio">
+      <input type="date" id="dataFim">
+      <button onclick="filtrarPorPeriodo()">Filtrar período</button>
+      <button onclick="resetarPeriodo()">Limpar período</button>
+      <button onclick="exportarPDF()">Exportar PDF</button>
     </div>
 
-    <div class="card grande cinza">
-      <div class="card-label">Frete acumulado</div>
-      <div class="card-valor" id="cardFreteAcumulado">0,00%</div>
-      <div class="card-subtexto" id="subFreteAcumulado">Base completa</div>
+    <div class="ultima-atualizacao" id="ultimaAtualizacao">Última atualização: -</div>
+
+    <div class="cards-principais">
+      <div class="card grande azul">
+        <div class="card-label">Frete do mês atual</div>
+        <div class="card-valor" id="cardFreteMesAtual">0,00%</div>
+        <div class="card-subtexto" id="subFreteMesAtual">Mês atual</div>
+      </div>
+
+      <div class="card grande cinza">
+        <div class="card-label">Frete acumulado</div>
+        <div class="card-valor" id="cardFreteAcumulado">0,00%</div>
+        <div class="card-subtexto" id="subFreteAcumulado">Base completa</div>
+      </div>
+
+      <div class="card grande">
+        <div class="card-label">% CIF</div>
+        <div class="card-valor" id="cardTipoCIF">0,00%</div>
+        <div class="card-subtexto">Somente pedidos CIF</div>
+      </div>
+
+      <div class="card grande">
+        <div class="card-label">% CIF/FOB</div>
+        <div class="card-valor" id="cardTipoCIFFOB">0,00%</div>
+        <div class="card-subtexto">Somente pedidos CIF/FOB</div>
+      </div>
     </div>
 
-    <div class="card grande">
-      <div class="card-label">% CIF</div>
-      <div class="card-valor" id="cardTipoCIF">0,00%</div>
-      <div class="card-subtexto">Somente pedidos CIF</div>
+    <div class="cards-pequenos">
+      <div class="card pequeno">
+        <div class="card-label">Frete de ontem</div>
+        <div class="card-valor" id="cardFreteOntem">0,00%</div>
+      </div>
+
+      <div class="card pequeno">
+        <div class="card-label">Pedidos ontem</div>
+        <div class="card-valor" id="cardPedidosOntem">0</div>
+      </div>
+
+      <div class="card pequeno">
+        <div class="card-label">Pedidos totais</div>
+        <div class="card-valor" id="totalPedidos">0</div>
+      </div>
     </div>
 
-    <div class="card grande">
-      <div class="card-label">% CIF/FOB</div>
-      <div class="card-valor" id="cardTipoCIFFOB">0,00%</div>
-      <div class="card-subtexto">Somente pedidos CIF/FOB</div>
-    </div>
-  </div>
+    <div class="secao">
+      <h2>Base importada</h2>
 
-  <div class="cards-pequenos">
-    <div class="card pequeno">
-      <div class="card-label">Frete de ontem</div>
-      <div class="card-valor" id="cardFreteOntem">0,00%</div>
-    </div>
+      <div class="filtros-base">
+        <input type="text" id="filtroPedido" placeholder="Filtrar pedido">
+        <input type="text" id="filtroTransportadora" placeholder="Filtrar transportadora">
+        <select id="filtroTipoFrete">
+          <option value="">Todos os tipos de frete</option>
+        </select>
+        <button onclick="aplicarFiltros()">Filtrar</button>
+        <button onclick="limparFiltros()">Limpar filtros</button>
+      </div>
 
-    <div class="card pequeno">
-      <div class="card-label">Pedidos ontem</div>
-      <div class="card-valor" id="cardPedidosOntem">0</div>
-    </div>
-
-    <div class="card pequeno">
-      <div class="card-label">Pedidos totais</div>
-      <div class="card-valor" id="totalPedidos">0</div>
-    </div>
-  </div>
-
-  <div class="secao">
-    <h2>Base importada</h2>
-
-    <div class="filtros-base">
-      <input type="text" id="filtroPedido" placeholder="Filtrar pedido">
-      <input type="text" id="filtroTransportadora" placeholder="Filtrar transportadora">
-      <select id="filtroTipoFrete">
-        <option value="">Todos os tipos de frete</option>
-      </select>
-      <button onclick="aplicarFiltros()">Filtrar</button>
-      <button onclick="limparFiltros()">Limpar filtros</button>
+      <div class="base-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Pedido</th>
+              <th>Data</th>
+              <th>Tipo Frete</th>
+              <th>Transportadora</th>
+              <th>Valor NF</th>
+              <th>Valor Frete</th>
+              <th>% Frete</th>
+            </tr>
+          </thead>
+          <tbody id="corpoTabela"></tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="base-container">
+    <div class="secao grid-dupla">
+      <div>
+        <h2>Resumo por Tipo de Frete</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Pedidos</th>
+              <th>Valor NF</th>
+              <th>Valor Frete</th>
+              <th>% Frete</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaTipoFrete"></tbody>
+        </table>
+      </div>
+
+      <div>
+        <h2>Resumo por Transportadora</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Transportadora</th>
+              <th>Pedidos</th>
+              <th>Valor NF</th>
+              <th>Valor Frete</th>
+              <th>% Frete</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaTransportadora"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="secao">
+      <h2>Resumo por Período</h2>
       <table>
         <thead>
           <tr>
-            <th>Pedido</th>
-            <th>Data</th>
-            <th>Tipo Frete</th>
-            <th>Transportadora</th>
-            <th>Valor NF</th>
-            <th>Valor Frete</th>
-            <th>% Frete</th>
-          </tr>
-        </thead>
-        <tbody id="corpoTabela"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="secao grid-dupla">
-    <div>
-      <h2>Resumo por Tipo de Frete</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Tipo</th>
+            <th>Período</th>
             <th>Pedidos</th>
             <th>Valor NF</th>
             <th>Valor Frete</th>
             <th>% Frete</th>
           </tr>
         </thead>
-        <tbody id="tabelaTipoFrete"></tbody>
+        <tbody id="tabelaPeriodo"></tbody>
       </table>
     </div>
-
-    <div>
-      <h2>Resumo por Transportadora</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Transportadora</th>
-            <th>Pedidos</th>
-            <th>Valor NF</th>
-            <th>Valor Frete</th>
-            <th>% Frete</th>
-          </tr>
-        </thead>
-        <tbody id="tabelaTransportadora"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="secao">
-    <h2>Resumo por Período</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Período</th>
-          <th>Pedidos</th>
-          <th>Valor NF</th>
-          <th>Valor Frete</th>
-          <th>% Frete</th>
-        </tr>
-      </thead>
-      <tbody id="tabelaPeriodo"></tbody>
-    </table>
   </div>
 
   <div class="acoes-rodape">
@@ -387,6 +454,8 @@
 
   <script>
     let dadosImportados = [];
+    let dadosFiltradosPeriodo = null;
+    const META_FRETE = 5;
 
     function salvarNoNavegador() {
       localStorage.setItem("dashboardFreteDados", JSON.stringify(dadosImportados));
@@ -404,18 +473,26 @@
       return false;
     }
 
-    function atualizarTelaCompleta() {
-      preencherFiltroTipoFrete();
-      renderizarTabelaBase();
-      calcularDashboard();
-      renderizarResumoTipoFrete();
-      renderizarResumoTransportadora();
-      renderizarResumoPeriodo();
-      atualizarCardsExecutivos();
+    function atualizarTelaCompleta(listaBase = null) {
+      const base = listaBase || dadosImportados;
+      preencherFiltroTipoFrete(base);
+      renderizarTabelaBase(base);
+      calcularDashboard(base);
+      renderizarResumoTipoFrete(base);
+      renderizarResumoTransportadora(base);
+      renderizarResumoPeriodo(base);
+      atualizarCardsExecutivos(base);
+      atualizarUltimaAtualizacao();
+    }
+
+    function atualizarUltimaAtualizacao() {
+      document.getElementById("ultimaAtualizacao").innerText =
+        "Última atualização: " + new Date().toLocaleString("pt-BR");
     }
 
     function limparTudo() {
       dadosImportados = [];
+      dadosFiltradosPeriodo = null;
       localStorage.removeItem("dashboardFreteDados");
 
       document.getElementById("corpoTabela").innerHTML = "";
@@ -428,8 +505,11 @@
       document.getElementById("filtroTransportadora").value = "";
       document.getElementById("filtroTipoFrete").innerHTML = '<option value="">Todos os tipos de frete</option>';
       document.getElementById("csvFile").value = "";
+      document.getElementById("dataInicio").value = "";
+      document.getElementById("dataFim").value = "";
 
       limparCardsExecutivos();
+      atualizarUltimaAtualizacao();
     }
 
     function limparCardsExecutivos() {
@@ -476,6 +556,20 @@
       } catch (erro) {
         console.error(erro);
       }
+    }
+
+    function exportarPDF() {
+      const elemento = document.getElementById("areaExportacao");
+
+      const opt = {
+        margin: 0.3,
+        filename: "dashboard-frete.pdf",
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, scrollY: 0 },
+        jsPDF: { unit: "in", format: "a4", orientation: "portrait" }
+      };
+
+      html2pdf().set(opt).from(elemento).save();
     }
 
     function detectarSeparador(linhaCabecalho) {
@@ -540,7 +634,18 @@
       return nf > 0 ? (frete / nf) * 100 : 0;
     }
 
-    function atualizarCardsExecutivos() {
+    function aplicarCorMeta(elementId, valor) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+
+      if (valor > META_FRETE) {
+        el.style.color = "#dc2626";
+      } else {
+        el.style.color = "#16a34a";
+      }
+    }
+
+    function atualizarCardsExecutivos(base = dadosImportados) {
       const hoje = new Date();
       const mesAtual = hoje.getMonth();
       const anoAtual = hoje.getFullYear();
@@ -548,12 +653,12 @@
       const ontem = new Date();
       ontem.setDate(hoje.getDate() - 1);
 
-      const dadosMesAtual = dadosImportados.filter(item => {
+      const dadosMesAtual = base.filter(item => {
         const data = converterDataBRParaDate(item.data);
         return data && data.getMonth() === mesAtual && data.getFullYear() === anoAtual;
       });
 
-      const dadosOntem = dadosImportados.filter(item => {
+      const dadosOntem = base.filter(item => {
         const data = converterDataBRParaDate(item.data);
         return data &&
           data.getDate() === ontem.getDate() &&
@@ -561,16 +666,16 @@
           data.getFullYear() === ontem.getFullYear();
       });
 
-      const dadosCIF = dadosImportados.filter(item =>
+      const dadosCIF = base.filter(item =>
         String(item.tipoFrete || "").trim().toUpperCase() === "CIF"
       );
 
-      const dadosCIFFOB = dadosImportados.filter(item =>
+      const dadosCIFFOB = base.filter(item =>
         String(item.tipoFrete || "").trim().toUpperCase() === "CIF/FOB"
       );
 
       const percentualMesAtual = calcularPercentualDaLista(dadosMesAtual);
-      const percentualAcumulado = calcularPercentualDaLista(dadosImportados);
+      const percentualAcumulado = calcularPercentualDaLista(base);
       const percentualCIF = calcularPercentualDaLista(dadosCIF);
       const percentualCIFFOB = calcularPercentualDaLista(dadosCIFFOB);
       const percentualOntem = calcularPercentualDaLista(dadosOntem);
@@ -579,13 +684,19 @@
       document.getElementById("subFreteMesAtual").innerText = `${dadosMesAtual.length} pedidos no mês atual`;
 
       document.getElementById("cardFreteAcumulado").innerText = formatarPercentual(percentualAcumulado);
-      document.getElementById("subFreteAcumulado").innerText = `${dadosImportados.length} pedidos na base`;
+      document.getElementById("subFreteAcumulado").innerText = `${base.length} pedidos na base`;
 
       document.getElementById("cardTipoCIF").innerText = formatarPercentual(percentualCIF);
       document.getElementById("cardTipoCIFFOB").innerText = formatarPercentual(percentualCIFFOB);
 
       document.getElementById("cardFreteOntem").innerText = formatarPercentual(percentualOntem);
       document.getElementById("cardPedidosOntem").innerText = dadosOntem.length;
+
+      aplicarCorMeta("cardFreteMesAtual", percentualMesAtual);
+      aplicarCorMeta("cardFreteAcumulado", percentualAcumulado);
+      aplicarCorMeta("cardTipoCIF", percentualCIF);
+      aplicarCorMeta("cardTipoCIFFOB", percentualCIFFOB);
+      aplicarCorMeta("cardFreteOntem", percentualOntem);
     }
 
     function processarCSV(texto, mostrarAlerta = false) {
@@ -619,6 +730,7 @@
       }
 
       dadosImportados = [];
+      dadosFiltradosPeriodo = null;
 
       for (let i = 1; i < linhasBrutas.length; i++) {
         const partes = linhasBrutas[i].split(separador);
@@ -690,11 +802,11 @@
       });
     }
 
-    function preencherFiltroTipoFrete() {
+    function preencherFiltroTipoFrete(base = dadosImportados) {
       const select = document.getElementById("filtroTipoFrete");
       select.innerHTML = '<option value="">Todos os tipos de frete</option>';
 
-      const tiposUnicos = [...new Set(dadosImportados.map(item => item.tipoFrete).filter(Boolean))].sort();
+      const tiposUnicos = [...new Set(base.map(item => item.tipoFrete).filter(Boolean))].sort();
 
       tiposUnicos.forEach(tipo => {
         const option = document.createElement("option");
@@ -705,11 +817,12 @@
     }
 
     function aplicarFiltros() {
+      const base = dadosFiltradosPeriodo || dadosImportados;
       const filtroPedido = document.getElementById("filtroPedido").value.trim().toLowerCase();
       const filtroTransportadora = document.getElementById("filtroTransportadora").value.trim().toLowerCase();
       const filtroTipoFrete = document.getElementById("filtroTipoFrete").value;
 
-      const filtrados = dadosImportados.filter(item => {
+      const filtrados = base.filter(item => {
         const atendePedido = !filtroPedido || item.pedido.toLowerCase().includes(filtroPedido);
         const atendeTransportadora = !filtroTransportadora || item.transportadora.toLowerCase().includes(filtroTransportadora);
         const atendeTipoFrete = !filtroTipoFrete || item.tipoFrete === filtroTipoFrete;
@@ -724,20 +837,51 @@
       document.getElementById("filtroPedido").value = "";
       document.getElementById("filtroTransportadora").value = "";
       document.getElementById("filtroTipoFrete").value = "";
-      renderizarTabelaBase();
+      renderizarTabelaBase(dadosFiltradosPeriodo || dadosImportados);
     }
 
-    function calcularDashboard() {
-      document.getElementById("totalPedidos").innerText = dadosImportados.length;
+    function filtrarPorPeriodo() {
+      const valorInicio = document.getElementById("dataInicio").value;
+      const valorFim = document.getElementById("dataFim").value;
+
+      if (!valorInicio || !valorFim) {
+        alert("Preencha data inicial e data final.");
+        return;
+      }
+
+      const inicio = new Date(valorInicio + "T00:00:00");
+      const fim = new Date(valorFim + "T23:59:59");
+
+      dadosFiltradosPeriodo = dadosImportados.filter(item => {
+        const data = converterDataBRParaDate(item.data);
+        return data && data >= inicio && data <= fim;
+      });
+
+      document.getElementById("filtroPedido").value = "";
+      document.getElementById("filtroTransportadora").value = "";
+      document.getElementById("filtroTipoFrete").value = "";
+
+      atualizarTelaCompleta(dadosFiltradosPeriodo);
     }
 
-    function renderizarResumoTipoFrete() {
+    function resetarPeriodo() {
+      document.getElementById("dataInicio").value = "";
+      document.getElementById("dataFim").value = "";
+      dadosFiltradosPeriodo = null;
+      atualizarTelaCompleta(dadosImportados);
+    }
+
+    function calcularDashboard(base = dadosImportados) {
+      document.getElementById("totalPedidos").innerText = base.length;
+    }
+
+    function renderizarResumoTipoFrete(base = dadosImportados) {
       const tabela = document.getElementById("tabelaTipoFrete");
       tabela.innerHTML = "";
 
       const grupos = {};
 
-      dadosImportados.forEach(item => {
+      base.forEach(item => {
         const chave = item.tipoFrete || "Sem tipo";
 
         if (!grupos[chave]) {
@@ -765,13 +909,13 @@
       });
     }
 
-    function renderizarResumoTransportadora() {
+    function renderizarResumoTransportadora(base = dadosImportados) {
       const tabela = document.getElementById("tabelaTransportadora");
       tabela.innerHTML = "";
 
       const grupos = {};
 
-      dadosImportados.forEach(item => {
+      base.forEach(item => {
         const chave = item.transportadora || "Sem transportadora";
 
         if (!grupos[chave]) {
@@ -801,13 +945,13 @@
         });
     }
 
-    function renderizarResumoPeriodo() {
+    function renderizarResumoPeriodo(base = dadosImportados) {
       const tabela = document.getElementById("tabelaPeriodo");
       tabela.innerHTML = "";
 
       const grupos = {};
 
-      dadosImportados.forEach(item => {
+      base.forEach(item => {
         const chave = obterPeriodo(item.data);
 
         if (!grupos[chave]) {
