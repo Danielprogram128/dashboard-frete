@@ -142,6 +142,12 @@
       z-index: 1;
     }
 
+    .status {
+      font-size: 13px;
+      color: #444;
+      margin-top: 6px;
+    }
+
     @media (max-width: 900px) {
       .grid-dupla {
         grid-template-columns: 1fr;
@@ -155,12 +161,18 @@
 
   <div class="topo">
     <input type="file" id="csvFile" accept=".csv">
-    <button onclick="importarCSV()">Importar CSV</button>
+    <button onclick="importarCSV()">Importar CSV local</button>
+    <button onclick="exportarDados()">Exportar dados</button>
+    <button onclick="carregarCSVdoGitHub()">Recarregar do GitHub</button>
     <button onclick="limparTudo()">Limpar tudo</button>
   </div>
 
   <div class="obs">
     Cabeçalhos esperados no CSV: <strong>Pedido, Data, Tipo Frete, Transportadora, Valor NF, Valor Frete</strong>
+  </div>
+
+  <div class="status" id="statusCarregamento">
+    Aguardando carregamento.
   </div>
 
   <div class="cards">
@@ -269,6 +281,10 @@
   <script>
     let dadosImportados = [];
 
+    function atualizarStatus(texto) {
+      document.getElementById("statusCarregamento").innerText = texto;
+    }
+
     function salvarNoNavegador() {
       localStorage.setItem("dashboardFreteDados", JSON.stringify(dadosImportados));
     }
@@ -279,7 +295,11 @@
       if (dadosSalvos) {
         dadosImportados = JSON.parse(dadosSalvos);
         atualizarTelaCompleta();
+        atualizarStatus("Dados carregados do navegador.");
+        return true;
       }
+
+      return false;
     }
 
     function atualizarTelaCompleta() {
@@ -309,6 +329,8 @@
       document.getElementById("filtroTransportadora").value = "";
       document.getElementById("filtroTipoFrete").innerHTML = '<option value="">Todos os tipos de frete</option>';
       document.getElementById("csvFile").value = "";
+
+      atualizarStatus("Base limpa.");
     }
 
     function importarCSV() {
@@ -324,10 +346,30 @@
 
       reader.onload = function(e) {
         const texto = e.target.result;
-        processarCSV(texto);
+        processarCSV(texto, true);
       };
 
       reader.readAsText(file, "UTF-8");
+    }
+
+    async function carregarCSVdoGitHub() {
+      atualizarStatus("Carregando base_frete.csv do GitHub...");
+
+      try {
+        const resposta = await fetch("base_frete.csv?cache=" + new Date().getTime());
+
+        if (!resposta.ok) {
+          throw new Error("Arquivo base_frete.csv não encontrado no GitHub.");
+        }
+
+        const texto = await resposta.text();
+        processarCSV(texto, false);
+        salvarNoNavegador();
+        atualizarStatus("Dados carregados automaticamente do GitHub.");
+      } catch (erro) {
+        atualizarStatus("Não foi possível carregar base_frete.csv do GitHub.");
+        console.error(erro);
+      }
     }
 
     function detectarSeparador(linhaCabecalho) {
@@ -364,7 +406,7 @@
       return dataTexto;
     }
 
-    function processarCSV(texto) {
+    function processarCSV(texto, mostrarAlerta = false) {
       const linhasBrutas = texto.split(/\r?\n/).filter(linha => linha.trim() !== "");
 
       if (linhasBrutas.length < 2) {
@@ -394,6 +436,8 @@
         return;
       }
 
+      dadosImportados = [];
+
       for (let i = 1; i < linhasBrutas.length; i++) {
         const partes = linhasBrutas[i].split(separador);
 
@@ -407,20 +451,39 @@
         };
 
         if (!item.pedido) continue;
-
-        const indiceExistente = dadosImportados.findIndex(d => d.pedido === item.pedido);
-
-        if (indiceExistente >= 0) {
-          dadosImportados[indiceExistente] = item;
-        } else {
-          dadosImportados.push(item);
-        }
+        dadosImportados.push(item);
       }
 
       salvarNoNavegador();
       atualizarTelaCompleta();
       document.getElementById("csvFile").value = "";
-      alert("Importação concluída. Os dados ficaram salvos no navegador.");
+
+      if (mostrarAlerta) {
+        alert("Importação concluída.");
+      }
+    }
+
+    function exportarDados() {
+      if (dadosImportados.length === 0) {
+        alert("Não há dados para exportar.");
+        return;
+      }
+
+      let csv = "Pedido;Data;Tipo Frete;Transportadora;Valor NF;Valor Frete\n";
+
+      dadosImportados.forEach(item => {
+        csv += `${item.pedido};${item.data};${item.tipoFrete};${item.transportadora};${item.valorNF};${item.valorFrete}\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "base_frete.csv";
+      a.click();
+
+      URL.revokeObjectURL(url);
     }
 
     function renderizarTabelaBase(lista = dadosImportados) {
@@ -604,7 +667,15 @@
       });
     }
 
-    carregarDoNavegador();
+    async function iniciarSistema() {
+      const carregouDoNavegador = carregarDoNavegador();
+
+      if (!carregouDoNavegador) {
+        await carregarCSVdoGitHub();
+      }
+    }
+
+    iniciarSistema();
   </script>
 
 </body>
